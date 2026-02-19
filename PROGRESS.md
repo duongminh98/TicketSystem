@@ -6,7 +6,7 @@
 > **CÁCH DÙNG:** AI mới đọc file này + PROJECT_BLUEPRINT.md + 5_DAY_PLAN.md rồi tiếp tục
 > từ bước tiếp theo (bước đầu tiên có trạng thái CHUA LAM).
 
-> Cập nhật lần cuối: 2026-02-19
+> Cập nhật lần cuối: 2026-02-19 (Ngày 2 hoàn thành)
 
 ---
 
@@ -21,7 +21,7 @@
 | Maven | 3.9.12 (`D:\tools\apache-maven-3.9.12`) |
 | Maven PATH | **CHUA co trong System PATH** - moi session can chay: `$env:Path = "D:\tools\apache-maven-3.9.12\bin;" + $env:Path` |
 | Docker | 28.5.1 (Docker Desktop) |
-| Git repo | CHUA khoi tao (chua co .git) |
+| Git repo | DA khoi tao (branch: master) |
 
 ---
 
@@ -39,19 +39,22 @@ d:\TicketSystem\
 ├── 5_DAY_PLAN.md                    ← Ke hoach 5 ngay
 ├── PROGRESS.md                      ← File nay
 │
-├── common-event-library\
-│   └── pom.xml                      ← PLACEHOLDER (chua co code)
+├── common-event-library\            ← DA HOAN THANH - 23 Java files, BUILD SUCCESS
+│   ├── pom.xml
+│   └── src/main/java/com/heditra/events/ (core/, infrastructure/, ticket/, payment/, user/, inventory/, notification/)
+├── user-service\                    ← DA HOAN THANH - Full CRUD + Cache + Events, BUILD SUCCESS
+│   ├── pom.xml (20 dependencies)
+│   └── src/main/java/com/heditra/userservice/ (controller, service, repository, model, dto, mapper, config, exception)
+├── inventory-service\               ← DA HOAN THANH - CRUD + Distributed Locking (Redisson), BUILD SUCCESS
+│   ├── pom.xml (18 dependencies)
+│   └── src/main/java/com/heditra/inventoryservice/ (controller, service, repository, model, dto, mapper, config, exception)
 ├── api-gateway\
 │   └── pom.xml                      ← PLACEHOLDER
 ├── ticket-service\
 │   └── pom.xml                      ← PLACEHOLDER
-├── user-service\
-│   └── pom.xml                      ← PLACEHOLDER
 ├── payment-service\
 │   └── pom.xml                      ← PLACEHOLDER
 ├── notification-service\
-│   └── pom.xml                      ← PLACEHOLDER
-├── inventory-service\
 │   └── pom.xml                      ← PLACEHOLDER
 └── saga-orchestrator-service\
     └── pom.xml                      ← PLACEHOLDER
@@ -63,12 +66,10 @@ d:\TicketSystem\
 
 ## BƯỚC TIẾP THEO CẦN LÀM
 
-> **=> NGAY 2, BUOC 2.1 - User Service: Khung + Model + Repository**
-> Tham chiếu: PROJECT_BLUEPRINT.md Section 8
-> Xem 5_DAY_PLAN.md dòng 222-261
-> Theo plan: GIT COMMIT truoc khi bat dau Ngay 2:
->   Commit 1: "feat: init project structure + docker infrastructure"
->   Commit 2: "feat: add common-event-library with core events + kafka infrastructure"
+> **=> NGAY 3, BUOC 3.1 - Ticket Service: Khung + Model**
+> Tham chiếu: PROJECT_BLUEPRINT.md Section 9
+> Xem 5_DAY_PLAN.md dòng 485-600
+> **GIT COMMIT can thuc hien:** "feat: add user-service + inventory-service with CRUD, caching, events, distributed locking"
 
 ---
 
@@ -136,8 +137,55 @@ d:\TicketSystem\
 
 ### NGÀY 2: USER SERVICE + INVENTORY SERVICE
 
-#### Bước 2.1 ~ 2.5 - User Service ⏳ CHUA LAM
-#### Bước 2.6 ~ 2.9 - Inventory Service ⏳ CHUA LAM
+#### Bước 2.1 ~ 2.5 - User Service ✅ DONE
+- **Thời gian:** 2026-02-19
+- **pom.xml:** 20 dependencies (spring-boot-starter-web, data-jpa, mysql-connector-j, spring-kafka, consul-discovery, actuator, validation, data-redis, cache, redisson:3.25.0, data-elasticsearch, circuitbreaker-resilience4j, resilience4j-spring-boot3, springdoc-openapi:2.3.0, micrometer-prometheus, lombok, test, kafka-test, h2-test)
+- **application.yml:** port 8082, userdb, Redis localhost:6379, Consul localhost:8500, Kafka localhost:29092
+- **Java files tạo (18 files):**
+  - `UserServiceApplication.java` - @SpringBootApplication + @EnableDiscoveryClient
+  - `model/User.java` - @Entity(table "users"), 9 fields (id, username, email, password, firstName, lastName, role, createdAt, updatedAt), @EntityListeners(AuditingEntityListener)
+  - `model/UserRole.java` - enum (ADMIN, USER, MANAGER)
+  - `repository/UserRepository.java` - extends JpaRepository, 5 query methods
+  - `dto/request/CreateUserRequest.java` - 6 fields with Bean Validation
+  - `dto/request/UpdateUserRequest.java` - 4 optional fields
+  - `dto/response/UserResponse.java` - 8 fields (no password)
+  - `dto/response/ApiResponse.java` - generic wrapper (success, data, message, timestamp)
+  - `dto/common/ApiErrorResponse.java` - error wrapper (success, errorCode, message, timestamp, path, details)
+  - `mapper/UserMapper.java` - toEntity, toResponse, toResponseList, updateEntityFromRequest
+  - `config/JpaAuditingConfig.java` - @EnableJpaAuditing
+  - `config/RedisConfig.java` - @EnableCaching, RedisTemplate, CacheManager (TTL 10min)
+  - `config/KafkaConfig.java` - ProducerFactory (acks=all, retries=3, idempotence=true), KafkaTemplate
+  - `config/EventPublisherConfig.java` - creates KafkaEventPublisher bean
+  - `config/OpenApiConfig.java` - Swagger UI config
+  - `exception/` - BusinessException, TechnicalException, ValidationException, UserNotFoundException, UserAlreadyExistsException, InvalidUserDataException
+  - `exception/handler/GlobalExceptionHandler.java` - @RestControllerAdvice, 5 exception handlers
+  - `service/UserService.java` - interface (8 methods)
+  - `service/impl/UserServiceImpl.java` - @Service, @Transactional, @Cacheable/@CachePut/@CacheEvict, publishes UserCreated/Updated/DeletedEvent
+  - `controller/UserController.java` - @RestController("/users"), 8 endpoints (POST, GET, GET/id, GET/username, GET/email, GET/role, PUT, DELETE)
+- **Test:** `mvn clean package` → BUILD SUCCESS (Tests: 1 run, 0 failures)
+
+#### Bước 2.6 ~ 2.10 - Inventory Service ✅ DONE
+- **Thời gian:** 2026-02-19
+- **Điểm khác biệt so với User Service:**
+  - `RedissonConfig.java` - tạo RedissonClient bean cho distributed locking
+  - `reserveSeats()` / `releaseSeats()` - dùng Redisson RLock (tryLock WAIT_TIME=10s, LEASE_TIME=5s), @Transactional(isolation=SERIALIZABLE)
+  - `InsufficientInventoryException`, `DuplicateEventException` - exception riêng
+- **application.yml:** port 8085, inventorydb, Redis localhost:6379, Consul localhost:8500, Kafka localhost:29092
+- **Java files tạo (17 files):**
+  - `InventoryServiceApplication.java`
+  - `model/Inventory.java` - @Entity(table "inventory"), 9 fields (id, eventName, eventDate, totalSeats, availableSeats, price, location, createdAt, updatedAt), @CreationTimestamp/@UpdateTimestamp
+  - `repository/InventoryRepository.java` - extends JpaRepository, 4 query methods + @Query findAvailableEvents
+  - `dto/request/` - CreateInventoryRequest (6 fields), UpdateInventoryRequest (5 optional fields)
+  - `dto/response/` - InventoryResponse (9 fields), ApiResponse<T>
+  - `dto/common/ApiErrorResponse.java`
+  - `mapper/InventoryMapper.java` - toEntity (sets availableSeats = totalSeats), toResponse, toResponseList, updateEntityFromRequest
+  - `config/` - RedisConfig, RedissonConfig, KafkaConfig, EventPublisherConfig, OpenApiConfig
+  - `exception/` - BusinessException, InventoryNotFoundException, InsufficientInventoryException, DuplicateEventException
+  - `exception/handler/GlobalExceptionHandler.java`
+  - `service/InventoryService.java` - interface (10 methods including reserveSeats, releaseSeats)
+  - `service/impl/InventoryServiceImpl.java` - **Distributed Locking pattern** (Redisson RLock), publishes InventoryReserved/ReleasedEvent
+  - `controller/InventoryController.java` - @RestController("/inventory"), 10 endpoints (CRUD + reserve + release + available + date-range)
+- **Test:** `mvn clean package` → BUILD SUCCESS (Tests: 1 run, 0 failures)
 
 ### NGÀY 3: TICKET SERVICE
 #### Bước 3.1 ~ 3.6 ⏳ CHUA LAM
@@ -164,7 +212,8 @@ d:\TicketSystem\
 
 | # | Commit Message | Bước | Ngày |
 |---|---------------|------|------|
-| - | (chua co commit nao - chua init git repo) | - | - |
+| 1 | feat: init project structure + docker infrastructure + common-event-library | 1.1-1.5 | 2026-02-19 |
+| 2 | (PENDING) feat: add user-service + inventory-service | 2.1-2.10 | 2026-02-19 |
 
 ---
 
