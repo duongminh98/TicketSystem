@@ -48,3 +48,6 @@ elasticsearch-data/
 # Test
 *.class
 hs_err_pid*
+
+# Docs
+*.md

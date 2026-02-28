@@ -23,4 +23,6 @@ public interface UserService {
     UserResponse updateUser(Long id, UpdateUserRequest request);
 
     void deleteUser(Long id);
+
+    List<UserResponse> searchUsers(String keyword);
 }

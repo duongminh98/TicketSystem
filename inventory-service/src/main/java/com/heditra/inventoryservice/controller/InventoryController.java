@@ -34,12 +34,6 @@ public class InventoryController {
                 .body(ApiResponse.success(inventory, "Inventory created successfully"));
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Get inventory by ID")
-    public ResponseEntity<ApiResponse<InventoryResponse>> getInventoryById(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.success(inventoryService.getInventoryById(id)));
-    }
-
     @GetMapping("/event/{eventName}")
     @Operation(summary = "Get inventory by event name")
     public ResponseEntity<ApiResponse<InventoryResponse>> getInventoryByEventName(
@@ -65,6 +59,12 @@ public class InventoryController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
         return ResponseEntity.ok(ApiResponse.success(inventoryService.getEventsByDateRange(start, end)));
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Get inventory by ID")
+    public ResponseEntity<ApiResponse<InventoryResponse>> getInventoryById(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(inventoryService.getInventoryById(id)));
     }
 
     @PutMapping("/{id}")
@@ -100,3 +100,4 @@ public class InventoryController {
         return ResponseEntity.noContent().build();
     }
 }
+

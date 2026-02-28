@@ -1,0 +1,17 @@
+package com.heditra.notificationservice.repository;
+
+import com.heditra.notificationservice.model.Notification;
+import com.heditra.notificationservice.model.NotificationStatus;
+import com.heditra.notificationservice.model.NotificationType;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface NotificationRepository extends JpaRepository<Notification, Long> {
+
+    List<Notification> findByUserId(Long userId);
+
+    List<Notification> findByStatus(NotificationStatus status);
+
+    List<Notification> findByType(NotificationType type);
+}

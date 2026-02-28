@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ticketing-config
+  labels:
+    app: ticketing-platform
+data:
+  MYSQL_HOST: mysql
+  MYSQL_PORT: "3306"
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  CONSUL_HOST: consul
+  CONSUL_PORT: "8500"
+  ELASTICSEARCH_HOST: elasticsearch
+  ELASTICSEARCH_PORT: "9200"
+  KEYCLOAK_ISSUER: http://keycloak:8080/realms/ticketing-system
+  KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/ticketing-system/protocol/openid-connect/certs
+

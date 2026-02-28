@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: saga-orchestrator-service
+  labels:
+    app: saga-orchestrator-service
+spec:
+  type: ClusterIP
+  selector:
+    app: saga-orchestrator-service
+  ports:
+    - name: http
+      port: 8086
+      targetPort: 8086
+

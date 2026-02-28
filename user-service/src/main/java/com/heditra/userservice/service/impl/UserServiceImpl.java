@@ -10,9 +10,11 @@ import com.heditra.userservice.dto.response.UserResponse;
 import com.heditra.userservice.exception.UserAlreadyExistsException;
 import com.heditra.userservice.exception.UserNotFoundException;
 import com.heditra.userservice.mapper.UserMapper;
+import com.heditra.userservice.document.UserDocument;
 import com.heditra.userservice.model.User;
 import com.heditra.userservice.model.UserRole;
 import com.heditra.userservice.repository.UserRepository;
+import com.heditra.userservice.repository.UserSearchRepository;
 import com.heditra.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -31,6 +34,7 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserSearchRepository userSearchRepository;
     private final UserMapper userMapper;
     private final EventPublisher eventPublisher;
 
@@ -42,6 +46,7 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.toEntity(request);
         User savedUser = userRepository.save(user);
 
+        indexUserToElasticsearch(savedUser);
         publishUserCreatedEvent(savedUser);
 
         log.info("User created: id={}, username={}", savedUser.getId(), savedUser.getUsername());
@@ -93,6 +98,7 @@ public class UserServiceImpl implements UserService {
         userMapper.updateEntityFromRequest(user, request);
         User savedUser = userRepository.save(user);
 
+        indexUserToElasticsearch(savedUser);
         publishUserUpdatedEvent(savedUser);
 
         log.info("User updated: id={}", savedUser.getId());
@@ -108,9 +114,53 @@ public class UserServiceImpl implements UserService {
 
         userRepository.delete(user);
 
+        try {
+            userSearchRepository.deleteById(String.valueOf(id));
+        } catch (Exception e) {
+            log.warn("Failed to delete user from Elasticsearch: {}", e.getMessage());
+        }
         publishUserDeletedEvent(user);
 
         log.info("User deleted: id={}", id);
+    }
+
+    @Override
+    public List<UserResponse> searchUsers(String keyword) {
+        List<UserDocument> results = userSearchRepository
+                .findByFirstNameContainingOrLastNameContaining(keyword, keyword);
+
+        if (results.isEmpty()) {
+            results = userSearchRepository.findByUsernameContaining(keyword);
+        }
+        if (results.isEmpty()) {
+            results = userSearchRepository.findByEmailContaining(keyword);
+        }
+
+        List<Long> ids = results.stream()
+                .map(doc -> Long.parseLong(doc.getId()))
+                .collect(Collectors.toList());
+
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+
+        return userMapper.toResponseList(userRepository.findAllById(ids));
+    }
+
+    private void indexUserToElasticsearch(User user) {
+        try {
+            UserDocument doc = UserDocument.builder()
+                    .id(String.valueOf(user.getId()))
+                    .username(user.getUsername())
+                    .email(user.getEmail())
+                    .firstName(user.getFirstName())
+                    .lastName(user.getLastName())
+                    .role(user.getRole().name())
+                    .build();
+            userSearchRepository.save(doc);
+        } catch (Exception e) {
+            log.warn("Failed to index user to Elasticsearch: {}", e.getMessage());
+        }
     }
 
     private void validateUserUniqueness(CreateUserRequest request) {

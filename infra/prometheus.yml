@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'ticketing-services'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - api-gateway:8080
+          - user-service:8082
+          - ticket-service:8081
+          - payment-service:8083
+          - inventory-service:8085
+          - notification-service:8084
+          - saga-orchestrator-service:8086
+

@@ -20,6 +20,14 @@ public class ApiResponse<T> {
     private String message;
     private LocalDateTime timestamp;
 
+    public static <T> ApiResponse<T> failure(String errorCode, String message) {
+        return ApiResponse.<T>builder()
+                .success(false)
+                .message("[" + errorCode + "] " + message)
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
     public static <T> ApiResponse<T> success(T data, String message) {
         return ApiResponse.<T>builder()
                 .success(true)

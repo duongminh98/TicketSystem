@@ -41,12 +41,18 @@ spring:
       properties:
         spring.json.trusted.packages: "*"
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:8180/realms/ticketing-system/protocol/openid-connect/certs
+
 logging:
   level:
     com.heditra: INFO
     org.springframework: WARN
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} traceId=%X{traceId} userId=%X{userId} transactionId=%X{transactionId} - %msg%n"
 
 management:
   endpoints:

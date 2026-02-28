@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: saga-orchestrator-service
+  labels:
+    app: saga-orchestrator-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: saga-orchestrator-service
+  template:
+    metadata:
+      labels:
+        app: saga-orchestrator-service
+    spec:
+      containers:
+        - name: saga-orchestrator-service
+          image: ticket-system/saga-orchestrator-service:dev
+          ports:
+            - containerPort: 8086
+          envFrom:
+            - configMapRef:
+                name: ticketing-config
+            - secretRef:
+                name: ticketing-secrets
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://$(MYSQL_HOST):3306/sagadb?createDatabaseIfNotExist=true
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: ticketing-secrets
+                  key: MYSQL_USERNAME
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ticketing-secrets
+                  key: MYSQL_PASSWORD
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: ticketing-config
+                  key: KAFKA_BOOTSTRAP_SERVERS
+            - name: SPRING_CLOUD_CONSUL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: ticketing-config
+                  key: CONSUL_HOST
+            - name: SPRING_CLOUD_CONSUL_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: ticketing-config
+                  key: CONSUL_PORT
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8086
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8086
+            initialDelaySeconds: 45
+            periodSeconds: 20
+
