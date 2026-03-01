@@ -1,6 +1,6 @@
 # Event-Driven Ticketing Platform
 
-Microservices-based ticketing system (Java 21, Spring Boot 3) demonstrating event-driven design, distributed transaction handling, concurrency control, and production-oriented practices.
+Microservices-based ticketing system (Java 21, Spring Boot 3) for ticket booking, payment, and notifications. The architecture follows an event-driven microservices pattern with the following key components:
 
 ### Architecture
 
@@ -8,33 +8,37 @@ Microservices-based ticketing system (Java 21, Spring Boot 3) demonstrating even
 
 ---
 
-## Project Description
+## Key Components
 
-- **Microservices + shared event library:** Split by bounded context (User, Ticket, Payment, Inventory, Notification) with a common event contract. *Result:* Domain-oriented design, easier to maintain and deploy services independently.
+- **Client Layer:** External clients (web, mobile) accessing the system via API Gateway
+- **API Gateway:** Spring Cloud Gateway routing requests to appropriate services; single entry point with path-based routing, CORS, and unified error responses
+- **Microservices:** Independent services — User, Ticket, Payment, Inventory, Notification — each with bounded context and own database
+- **Common Event Library:** Shared JAR for typed domain events and Kafka publisher; used by all services for consistent event contracts
+- **Kafka Event Backbone:** Apache Kafka as central message broker for asynchronous event-driven communication between services
+- **Service Discovery:** Consul for service registration and discovery; gateway routes using load-balanced service names
+- **Data Stores:** MySQL per service for persistent storage; Redis for caching and distributed locking (Redisson); Elasticsearch for search
+- **Authentication:** Keycloak as identity provider (OAuth2/OIDC); JWT validation at API Gateway and resource servers; role-based access control (RBAC)
+- **Payment Gateway:** VNPAY integration in Payment Service for real payment flow; callback endpoint for return URL and status sync
 
-- **API Gateway + service discovery:** Single entry point with path-based routing, CORS, and unified error responses; Consul for registration and lookup. *Result:* One client-facing endpoint and load-balanced traffic to backend services.
+---
 
-- **Database-per-service:** Each service owns its own MySQL schema. *Result:* Data isolation per domain and independent scaling/deployment.
+## Features
 
-- **Event-driven choreography (Kafka):** Coordinate booking–payment–notification flows via events across services. *Result:* Cross-service consistency without distributed 2PC; eventual consistency where appropriate.
-
-- **Idempotent consumers and clear event contracts:** Safe retries and duplicate handling; typed events with consistent payloads. *Result:* Correct state under Kafka retries or duplicates; no duplicate payment or notification records.
-
-- **Distributed locking (Redisson):** Lock around seat reserve/release in Inventory. *Result:* No overbooking under concurrent requests.
-
-- **Optimistic locking on Ticket:** Version check on status updates. *Result:* No lost updates under concurrent writes.
-
-- **Cache-aside (Redis):** Cache for frequently read entities with TTL and eviction on write. *Result:* Lower DB load and faster reads while keeping cache coherent.
-
-- **Elasticsearch:** User and ticket search by keyword. *Result:* Search workload off primary DB; better performance for query-heavy use cases.
-
-- **Circuit breaker and retry (Resilience4j):** On calls from Ticket to Inventory with fallback. *Result:* Fail fast when downstream is slow or down; no cascading latency.
-
-- **Health, metrics, and API docs:** Actuator, Prometheus, and OpenAPI/Swagger for all services. *Result:* Easier operations, monitoring, and API consumption.
-
-- **Global exception handling, error DTOs, and validation:** Centralized error handling and Bean Validation on inputs. *Result:* Consistent API behavior and clearer debugging; REST contract separated from domain.
-
-- **Maven multi-module and Docker Compose:** Single build; infrastructure (DB, cache, message broker, discovery, search) via Compose. *Result:* Simple local and containerized runs; quick onboarding.
+- **Microservices Architecture:** Independent, scalable services with clear domain boundaries and database-per-service
+- **Event-Driven Communication:** Asynchronous messaging via Apache Kafka; typed events (ticket-created, payment-completed, user-created, etc.) with multiple consumers per topic
+- **CQRS Implementation:** Command Query Responsibility Segregation in Ticket Service for optimized read/write operations (command and query handlers)
+- **Service Discovery:** Consul-based service registration and discovery; health checks and load-balanced routing
+- **API Gateway:** Single entry point with routing, load balancing, CORS, and unified error responses
+- **Resilience Patterns:** Circuit breakers and retries (Resilience4j) for Ticket → Inventory calls; distributed locking (Redisson) for seat reserve/release to prevent overbooking
+- **Caching:** Redis-based cache-aside for User, Inventory, and Ticket with TTL and eviction on write
+- **Optimistic Locking:** Versioned Ticket entity to handle concurrent updates safely
+- **VNPAY Integration:** Real payment flow via VNPAY gateway; configurable TmnCode, HashSecret, return URL; callback handler to update payment status and publish events
+- **Keycloak Authentication:** OAuth2/OIDC with JWT; Spring Security resource server; realm and client configuration; RBAC with Keycloak roles; optional user sync
+- **Monitoring & Observability:** Spring Actuator health endpoints; Micrometer and Prometheus for metrics
+- **Search & Analytics:** Elasticsearch integration for user search by keyword and ticket indexing
+- **Health Checks:** Comprehensive health endpoints for all services
+- **API Documentation:** OpenAPI/Swagger documentation for all services
+- **Containerization:** Docker and Docker Compose for infrastructure (MySQL, Redis, Kafka, Zookeeper, Consul, Elasticsearch, Keycloak) and local runs
 
 ---
 
@@ -48,5 +52,4 @@ Microservices-based ticketing system (Java 21, Spring Boot 3) demonstrating even
 - **Resilience** — Resilience4j (circuit breaker, retry)
 - **Docs & Observability** — SpringDoc OpenAPI, Actuator, Micrometer/Prometheus
 - **Infrastructure** — Docker, Docker Compose
-
 
