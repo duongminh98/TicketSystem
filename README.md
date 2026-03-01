@@ -12,7 +12,7 @@ Microservices-based ticketing system (Java 21, Spring Boot 3) for ticket booking
 
 - **Client Layer:** External clients (web, mobile) accessing the system via API Gateway
 - **API Gateway:** Spring Cloud Gateway routing requests to appropriate services; single entry point with path-based routing, CORS, and unified error responses
-- **Microservices:** Independent services — User, Ticket, Payment, Inventory, Notification — each with bounded context and own database
+- **Microservices:** Independent services: User, Ticket, Payment, Inventory, Notification: each with bounded context and own database
 - **Common Event Library:** Shared JAR for typed domain events and Kafka publisher; used by all services for consistent event contracts
 - **Kafka Event Backbone:** Apache Kafka as central message broker for asynchronous event-driven communication between services
 - **Service Discovery:** Consul for service registration and discovery; gateway routes using load-balanced service names
@@ -44,12 +44,12 @@ Microservices-based ticketing system (Java 21, Spring Boot 3) for ticket booking
 
 ## Tech Stack
 
-- **Core** — Java 21, Spring Boot 3.2, Spring Cloud 2023.0, Maven (multi-module)
-- **API & Gateway** — Spring Web (REST), Spring Cloud Gateway (reactive)
-- **Messaging** — Apache Kafka 7.5, Spring Kafka
-- **Data** — MySQL 8, Spring Data JPA, Redis 7, Redisson, Elasticsearch 8.x
-- **Discovery** — HashiCorp Consul
-- **Resilience** — Resilience4j (circuit breaker, retry)
-- **Docs & Observability** — SpringDoc OpenAPI, Actuator, Micrometer/Prometheus
-- **Infrastructure** — Docker, Docker Compose
+- **Core**: Java 21, Spring Boot 3.2, Spring Cloud 2023.0, Maven (multi-module)
+- **API & Gateway**: Spring Web (REST), Spring Cloud Gateway (reactive)
+- **Messaging**: Apache Kafka 7.5, Spring Kafka
+- **Data**: MySQL 8, Spring Data JPA, Redis 7, Redisson, Elasticsearch 8.x
+- **Discovery**: HashiCorp Consul
+- **Resilience**: Resilience4j (circuit breaker, retry)
+- **Docs & Observability**: SpringDoc OpenAPI, Actuator, Micrometer/Prometheus
+- **Infrastructure**: Docker, Docker Compose
 
